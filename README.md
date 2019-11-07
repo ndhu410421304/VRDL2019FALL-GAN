@@ -1,5 +1,5 @@
 # VRDL2019FALL-GAN
-This is a implementation of WGANGP model.
+This is a implementation of WGANGP model testing on celebA .
 Before use this model, you may neddd to first run the helper.py to help collecting required data.
 
 The model had already been fine-tuned, butit may be possible to improve more. I had read the instruction from Pytorch-GAN repository, and try to start by modifying itsd code. So it may be a good start before start to modify the model. What could be modify for this model may be:
@@ -9,6 +9,9 @@ Remember to adjust input of the model based the model stucture. different struct
 
 ## 2. Gradient Penalty Loss
 Graident penalty loss provide additoonal information to improve discriminator loss for a more smoothing training process. You can change the structure of how to compute gradient penalty if you want, or you can adjust the weight of gradient penalty first to see the performance change / loss change progress.
+
+## 3. Data augmentation
+This may not be a nust-do, but by doing so, you could enlarge your training dataset by only a few lines of could. For example, you can randomly flip the image to generatere flipped images, which could easily enlarge your dataset by 2x bigger of ral images. Other implemenmtio of data augmerntation may be welcome, but try not to generate too 'fake' images, for example, rotate an image in too big degree; which we could not expect the result of output to become better or not. Other thing ios that randomcrop is not going to work for this case, since for this celebA testing dataset, the human face were mostly located at center with size of 108*108. Since we only want face information for training, we would like to let each face were in same position. There is also more prescise data about where the faces were located in image, you can find it in dataset's webpage.
 
 Something you could observe for model evaluation during training process:
 
