@@ -15,7 +15,7 @@ import torch
 import helper
 import matplotlib.pyplot as plt
 
-Tensor = torch.cuda.FloatTensor
+cuda_tensor = torch.cuda.FloatTensor
 
 
 # Outpuut figure function for generate desire output
@@ -108,12 +108,12 @@ class Discriminator(nn.Module):
 # loss.
 def compute_gradient_penalty(D, real_samples, gen_samples):
     # Setup random paramter
-    alpha = Tensor(np.random.random((real_samples.size(0), 1, 1, 1)))
+    alpha = cuda_tensor(np.random.random((real_samples.size(0), 1, 1, 1)))
     # Random interpolate between real and generate image
     interpolates = (alpha * real_samples + (
         (1 - alpha) * gen_samples)).requires_grad_(True)
     interpolates_D = D(interpolates)
-    gen = Variable(Tensor(
+    gen = Variable(cuda_tensor(
         real_samples.shape[0], 1).fill_(1.0), requires_grad=False)
     # Get gradient interpoloategithub
     gradients = autograd.grad(
@@ -134,9 +134,9 @@ generator = Generator().cuda()
 discriminator = Discriminator().cuda()
 
 # Use adam as optimizer: froim gam hack
-optimizer_G = torch.optim.Adam(
+optimizer_g = torch.optim.Adam(
     generator.parameters(), lr=0.002, betas=(0.5, 0.999))
-optimizer_D = torch.optim.Adam(
+optimizer_d = torch.optim.Adam(
     discriminator.parameters(), lr=0.002, betas=(0.5, 0.999))
 
 # Data loader for loading data with
@@ -162,8 +162,8 @@ dataloader = torch.utils.data.DataLoader(dataset, batch_size=opt.batch_size,
 # Main Training part
 for epoch in range(opt.max_epochs):
     for i, (imgs, _) in enumerate(dataloader):
-        real_imgs = Variable(imgs.type(Tensor))
-        optimizer_D.zero_grad()
+        real_imgs = Variable(imgs.type(cuda_tensor))
+        optimizer_d.zero_grad()
         noise = torch.randn(opt.batch_size, opt.latent_dim, 1, 1).cuda()
         # Genertate random image from random noise
         #
@@ -175,22 +175,22 @@ for epoch in range(opt.max_epochs):
             gradient_penalty = compute_gradient_penalty(
                 discriminator, real_imgs.data, gen_imgs.data)  # compute gp
             # mean of valididity _+ gp loss weight * gp
-            loss_D = -torch.mean(
+            loss_d = -torch.mean(
                 real_validity) + torch.mean(
                     gen_validity) + 7.5 * gradient_penalty
-            loss_D.backward()
-            optimizer_D.step()  # update discriminator
-            optimizer_G.zero_grad()
+            loss_d.backward()
+            optimizer_d.step()  # update discriminator
+            optimizer_g.zero_grad()
             if i % 5 == 0:  # update per 5 batches
                 gen_imgs = generator(noise)
                 gen_validity = discriminator(gen_imgs)
-                loss_G = -torch.mean(gen_validity)
-                loss_G.backward()
-                optimizer_G.step()  # update generator
+                loss_g = -torch.mean(gen_validity)
+                loss_g.backward()
+                optimizer_g.step()  # update generator
                 print(
                     "[Epoch %d/%d] [Batch %d/%d] [D loss: %f] [G loss: %f]"
                     % (epoch, opt.max_epochs, i, len(
-                        dataloader), loss_D.item(), loss_G.item())
+                        dataloader), loss_d.item(), loss_g.item())
                 )
 
         # For last batch of input of each epoch:
@@ -205,7 +205,7 @@ for epoch in range(opt.max_epochs):
                 noise = torch.randn(
                     opt.batch_size, opt.latent_dim, 1, 1).cuda()
                 gen_imgs = generator(noise)  # generate image from noise
-                # tensor move from cuda to cpu,
+                # Tensor move from cuda to cpu,
                 # then trasform from tensor to numpy array
                 gen_imgs = gen_imgs.data[:9].cpu().numpy()
                 # switch dimension to requirement
