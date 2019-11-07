@@ -65,25 +65,35 @@ class Generator(nn.Module):
         img = self.model(noise)
         return img
 
-# Using only full connected layer
-# for faster output and not-too-strong
-# discriminator.
+# Change Discriminator to
+# convolution layers, and do instancenorm
+# before put in layers.
 class Discriminator(nn.Module):
+
     def __init__(self):
-        super(Discriminator, self).__init__()
+        super().__init__()
 
         self.model = nn.Sequential(
-            nn.Linear(int(np.prod((3, opt.img_size, opt.img_size))), 512),
+            nn.InstanceNorm2d(3),
+            nn.Conv2d(3, 32, 4, 2, 1, bias=False),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Linear(512, 256),
+            nn.Conv2d(32, 64, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(64),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Linear(256, 1),
+            nn.Conv2d(64, 128, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(128),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(128, 256, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(256),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(256, 1, 4, 1, 0, bias=False),
+            nn.Sigmoid()
         )
 
     def forward(self, img):
-        img_flat = img.view(img.shape[0], -1)
-        validity = self.model(img_flat)
-        return validity
+        out = self.model(img)
+        out = out.view(-1)
+        return out
 
 # The main structure for this model is
 # "WGanGP", which the main diiferent of
@@ -143,7 +153,7 @@ for epoch in range(opt.max_epochs):
         gen_validity = discriminator(gen_imgs) # loss of discriminator evaluate generated image
         if(gen_imgs.shape == real_imgs.shape):
             gradient_penalty = compute_gradient_penalty(discriminator, real_imgs.data, gen_imgs.data) # compute gp
-            loss_D = -torch.mean(real_validity) + torch.mean(gen_validity) + 10 * gradient_penalty # mean of valididity _+ gp loss weight * gp
+            loss_D = -torch.mean(real_validity) + torch.mean(gen_validity) + 7.5 * gradient_penalty # mean of valididity _+ gp loss weight * gp
             loss_D.backward()
             optimizer_D.step() # update discriminator 
             optimizer_G.zero_grad()
