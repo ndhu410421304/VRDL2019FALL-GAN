@@ -114,8 +114,8 @@ def compute_gradient_penalty(D, real_samples, gen_samples):
         (1 - alpha) * gen_samples)).requires_grad_(True)
     interpolates_D = D(interpolates)
     gen = Variable(cuda_tensor(
-        real_samples.shape[0], 1).fill_(1.0), requires_grad=False)
-    # Get gradient interpoloategithub
+        real_samples.shape[0]).fill_(1.0), requires_grad=False)
+    # Get gradient interpoloate
     gradients = autograd.grad(
         outputs=interpolates_D,
         inputs=interpolates,
