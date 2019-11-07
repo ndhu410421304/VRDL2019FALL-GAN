@@ -1,3 +1,6 @@
+#
+# This is a code for gatheriung required training data
+#
 
 import os
 import helper
@@ -32,12 +35,3 @@ def output_fig(images_array, file_name="./results"):
 output_fig(generated_images)
 
 print(generated_images.dtype)
-
-'''
-model = torch.hub.load('facebookresearch/pytorch_GAN_zoo:hub', 'DCGAN', pretrained=True, useGPU=use_gpu)
-
-for i in range(500):
-    generate_images = genererator(z_vetcor, batch_size=9)
-    print(generate_images.shape) # should be (9, width, height, 3)
-    output_fig(generated_images, file_name="images/{}_image".format(str.zfill(str(i), 3)))
-'''
