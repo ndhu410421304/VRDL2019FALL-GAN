@@ -135,9 +135,9 @@ discriminator = Discriminator().cuda()
 
 # Use adam as optimizer: froim gam hack
 optimizer_g = torch.optim.Adam(
-    generator.parameters(), lr=0.002, betas=(0.5, 0.999))
+    generator.parameters(), lr=0.0002, betas=(0.5, 0.999))
 optimizer_d = torch.optim.Adam(
-    discriminator.parameters(), lr=0.002, betas=(0.5, 0.999))
+    discriminator.parameters(), lr=0.0001, betas=(0.5, 0.999))
 
 # Data loader for loading data with
 # data augmentation.
@@ -161,8 +161,8 @@ dataloader = torch.utils.data.DataLoader(dataset, batch_size=opt.batch_size,
 
 # Main Training part
 for epoch in range(opt.max_epochs):
-    for i, (imgs, _) in enumerate(dataloader):
-        real_imgs = Variable(imgs.type(cuda_tensor))
+    for i, (imgs) in enumerate(dataloader, 0):
+        real_imgs = imgs[0].cuda()
         optimizer_d.zero_grad()
         noise = torch.randn(opt.batch_size, opt.latent_dim, 1, 1).cuda()
         # Genertate random image from random noise
@@ -175,9 +175,9 @@ for epoch in range(opt.max_epochs):
             gradient_penalty = compute_gradient_penalty(
                 discriminator, real_imgs.data, gen_imgs.data)  # compute gp
             # mean of valididity _+ gp loss weight * gp
-            loss_d = -torch.mean(
+            loss_d = (-torch.mean(
                 real_validity) + torch.mean(
-                    gen_validity) + 7.5 * gradient_penalty
+                    gen_validity) + 7.5 * gradient_penalty)
             loss_d.backward()
             optimizer_d.step()  # update discriminator
             optimizer_g.zero_grad()
